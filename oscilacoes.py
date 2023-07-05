@@ -3,7 +3,7 @@ import sys
 
 def coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant):
     # Cálculo da frequência angular
-    omega = np.sqrt(2*spring_constant / mass)
+    omega = np.sqrt(spring_constant / mass)
 
     # Matriz de oscilação acoplada
     A = np.zeros((dimensions, dimensions))  # Cria uma matriz vazia de dimensões x dimensões
@@ -12,7 +12,7 @@ def coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant):
     for i in range(dimensions):
         for j in range(dimensions):
             if i == j:
-                A[i, j] = 2 * omega**2
+                A[i, j] = -2 * omega**2
             elif abs(i - j) == 1:
                 A[i, j] = omega**2
 
@@ -30,7 +30,7 @@ def coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant):
         x = np.dot(A, x) + displacement[i]  # Cálculo do próximo deslocamento com base na matriz A e no deslocamento atual
         x_t[i] = x  # Armazena o deslocamento na matriz x_t
 
-    return omega, x_t, A
+    return omega, x_t, A, amplitude
 
 # Obtendo os dados do usuário
 try:
@@ -57,23 +57,31 @@ except ValueError:
     print("Erro: O deslocamento x2 deve ser um número real.")
     sys.exit()
 
-try:
-    amplitude = float(input("Digite a amplitude: "))
-except ValueError:
-    print("Erro: A amplitude deve ser um número real.")
-    sys.exit()
+use_amplitude = input("Deseja inserir a amplitude? (s/n): ")
+if use_amplitude.lower() == "s":
+    try:
+        amplitude = float(input("Digite a amplitude: "))
+    except ValueError:
+        print("Erro: A amplitude deve ser um número real.")
+        sys.exit()
+else:
+    # Calculando a amplitude com base nos dados fornecidos
+    amplitude = np.sqrt(x1**2 + x2**2) / np.sqrt(2)  # Amplitude é calculada como a raiz quadrada da média dos quadrados dos deslocamentos x1 e x2
 
+# Obtendo a constante elástica
 try:
     spring_constant = float(input("Digite a constante elástica: "))
 except ValueError:
     print("Erro: A constante elástica deve ser um número real.")
     sys.exit()
 
+print("Amplitude:", amplitude)
+
 # Calculando as oscilações acopladas
-omega, x_t, A = coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant)
+omega, x_t, A, amplitude = coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant)
 
 # Imprimindo o valor de omega
-print("Valor de omega: ", omega)
+print("Valor de omega:", omega)
 
 # Mostrando a matriz
 print("Matriz:")
