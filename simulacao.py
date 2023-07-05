@@ -1,54 +1,52 @@
 Web VPython 3.2
 
-parede1 = box(pos=vector(-35, 0, 0), size=vector(1, 10, 10), color=color.yellow)
-bloco1 = sphere(pos=vector(-25, 0, 0), size=vector(4, 4, 4), color=color.red)
-mola1 = helix(pos=parede1.pos + vector(0.5, 0, 0), axis=bloco1.pos - parede1.pos - vector(0.5, 0, 0), radius=0.5, thickness=0.5, coils=5, color=color.blue)
+# Configuração do ambiente de simulação
+scene = canvas(width=1920, height=1080, background=color.black)
+scene.autoscale = False
 
-parede2 = box(pos=vector(35, 0, 0), size=vector(1, 10, 10), color=color.yellow)
-bloco2 = sphere(pos=vector(25, 0, 0), size=vector(4, 4, 4), color=color.green)
-mola2 = helix(pos=parede2.pos - vector(0.5, 0, 0), axis=bloco2.pos - parede2.pos + vector(0.5, 0, 0), radius=0.5, thickness=0.5, coils=5, color=color.orange)
+# Parâmetros do sistema
+mass1 = 1.0  # Massa do primeiro objeto
+mass2 = 2.0  # Massa do segundo objeto
+k = 2.0  # Constante da mola
+initial_displacement = 0.5  # Deslocamento inicial da mola
+amplitude = 3.0  # Amplitude do movimento horizontal
+wall_distance = 13.0  # Distância entre as paredes
+num_turns = 10  # Número de voltas da mola
 
-# Define o espaço entre as molas
-espaco_entre_molas = 8.0
+# Criação dos objetos
+object1 = sphere(pos=vector(-amplitude/2, 0, 0), radius=0.5, color=color.red)
+object2 = sphere(pos=vector(amplitude/2, 0, 0), radius=1.0, color=color.blue)
+wall1 = box(pos=vector(-wall_distance/2, 0, 0), size=vector(0.1, 4, 4), color=color.green)
+wall2 = box(pos=vector(wall_distance/2, 0, 0), size=vector(0.1, 4, 4), color=color.green)
 
-# Atualiza a posição das molas com base no espaço entre elas
-mola1.pos = parede1.pos + vector(espaco_entre_molas / 2, 0, 0)
-mola2.pos = parede2.pos - vector(espaco_entre_molas / 2, 0, 0)
+# Criação das molas
+spring1 = helix(pos=wall1.pos, axis=object1.pos - wall1.pos, radius=0.20, thickness=0.05, coils=num_turns)
+spring2 = helix(pos=object1.pos, axis=object2.pos - object1.pos, radius=0.20, thickness=0.05, coils=num_turns)
+spring3 = helix(pos=object2.pos, axis=wall2.pos - object2.pos, radius=0.20, thickness=0.05, coils=num_turns)
 
-# Condições iniciais
-bloco1.vel = vector(0, 0, 0)
-bloco2.vel = vector(0, 0, 0)
-k = 400
-m = 5
+# Cálculo das constantes do sistema
+k_eff1 = k / ((1 / mass1) + (1 / 1e9))
+k_eff2 = k / ((1 / mass2) + (1 / mass1))
+k_eff3 = k / ((1 / 1e9) + (1 / mass2))
+angular_freq1 = sqrt(k_eff1 / mass1)
+angular_freq2 = sqrt(k_eff2 / (mass1 + mass2))
+angular_freq3 = sqrt(k_eff3 / mass2)
+
+# Tempo e ângulo inicial
 t = 0
-dt = 0.001
+theta = initial_displacement / amplitude
 
-# Equações
-while True:
+# Loop de simulação
+while t < 1000000:
     rate(500)
-    
-    # Primeiro bloco
-    f1 = vector(-bloco1.pos.x * k, 0, 0)
-    acel1 = f1 / m
-    bloco1.pos = bloco1.pos + (bloco1.vel * dt)
-    bloco1.vel = bloco1.vel + (acel1 * dt)
-    
-    # Verificar limite do primeiro bloco
-    if bloco1.pos.x <= -8:
-        bloco1.pos.x = -8
-    
-    mola1.axis = bloco1.pos - mola1.pos
-    
-    # Segundo bloco
-    f2 = vector(-bloco2.pos.x * k, 0, 0)
-    acel2 = f2 / m
-    bloco2.pos = bloco2.pos + (bloco2.vel * dt)
-    bloco2.vel = bloco2.vel + (acel2 * dt)
-    
-    # Verificar limite do segundo bloco
-    if bloco2.pos.x >= 8:
-        bloco2.pos.x = 8
-    
-    mola2.axis = bloco2.pos - mola2.pos
-    
-    t = t + dt
+
+    # Atualização da posição dos objetos
+    object1.pos.x = -amplitude/2 + amplitude * cos(angular_freq1 * t)
+    object2.pos.x = amplitude/2 + amplitude * cos(angular_freq1 * t + theta)
+    spring1.axis = object1.pos - wall1.pos
+    spring2.pos = object1.pos
+    spring2.axis = object2.pos - object1.pos
+    spring3.pos = object2.pos
+    spring3.axis = wall2.pos - object2.pos
+
+    t += 0.01
