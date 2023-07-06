@@ -3,18 +3,19 @@ import sys
 
 def coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant):
     # Cálculo da frequência angular
-    omega = np.sqrt(spring_constant / mass)
+    omega = 2*np.sqrt (spring_constant/mass)* np.sin(dimensions*np.pi/(2*(dimensions+1))) #maior autofrequencia
 
     # Matriz de oscilação acoplada
     A = np.zeros((dimensions, dimensions))  # Cria uma matriz vazia de dimensões x dimensões
 
     # Preenche todos os elementos da matriz com os valores corretos
+    #(Esse for if elif, basicamente evita que a matriz receba valores incorretos e que também os valores não sejam preenchidos em suas determinadas posições)
     for i in range(dimensions):
         for j in range(dimensions):
             if i == j:
-                A[i, j] = -2 * omega**2
+                A[i, j] = (2 *spring_constant) - (mass * omega**2)
             elif abs(i - j) == 1:
-                A[i, j] = omega**2
+                A[i, j] = - spring_constant
 
     # Vetor de deslocamento inicial
     x = np.zeros(dimensions)  # Cria um vetor de deslocamento inicial com todas as posições igual a zero
@@ -67,6 +68,7 @@ if use_amplitude.lower() == "s":
 else:
     # Calculando a amplitude com base nos dados fornecidos
     amplitude = np.sqrt(x1**2 + x2**2) / np.sqrt(2)  # Amplitude é calculada como a raiz quadrada da média dos quadrados dos deslocamentos x1 e x2
+    print("Amplitude com base nos dados fornecidos:", amplitude)
 
 # Obtendo a constante elástica
 try:
@@ -75,7 +77,7 @@ except ValueError:
     print("Erro: A constante elástica deve ser um número real.")
     sys.exit()
 
-print("Amplitude:", amplitude)
+
 
 # Calculando as oscilações acopladas
 omega, x_t, A, amplitude = coupled_oscillations(dimensions, mass, x1, x2, amplitude, spring_constant)
